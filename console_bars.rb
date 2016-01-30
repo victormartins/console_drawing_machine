@@ -35,9 +35,12 @@ class ConsoleBars
 
     matrix = plot_wave(matrix)
 
-    matrix.each do |row|
-      row.each_with_index do |content, index|
-        print_character(content, index, n_c)
+    2.times do
+      matrix.each do |row|
+        row.each_with_index do |content, index|
+          print_character(content, index, n_c)
+        end
+          sleep(1.0/160.0)
       end
     end
   end
