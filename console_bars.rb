@@ -32,28 +32,57 @@ class ConsoleBars
   def draw_wave(matrix)
     n_r = matrix.length - 1
     n_c = matrix.first.length - 1
-    # binding.pry
 
-    matrix[0][0] = 'A'
-    matrix[0][n_c] = 'Z'
-
-    matrix[1][0] = 'A'
-    matrix[1][n_c] = 'Z'
-
-    matrix[2][0] = 'A'
-    matrix[2][n_c] = 'Z'
-
-    matrix[n_r][0] = 'A'
-    matrix[n_r][n_c] = 'Z'
-
+    matrix = plot_wave(matrix)
 
     matrix.each do |row|
       row.each_with_index do |content, index|
-        $stdout.print content.nil? ? '_' : content
-        $stdout.puts if (index == n_c)
+        print_character(content, index, n_c)
       end
     end
   end
+
+  def print_character(content, index, n_c)
+    $stdout.print content.nil? ? ' ' : content
+    $stdout.puts if (index == n_c)
+  end
+
+  def plot_wave(matrix)
+    n_r = matrix.length - 1
+    n_c = matrix.first.length - 1
+
+    w_scale_factor = 360/n_c
+
+    y_calculator = scale([-1,1],[0,n_c])
+    (0..n_r).each do |x|
+      x_degrees = w_scale_factor * x
+      sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
+      y = y_calculator.call(sin_y).to_i
+
+      $stdout.puts("X=#{x}\tY=#{y}")
+      matrix[x][y] = 'x'
+    end
+
+    matrix
+  end
+
+  def scale(domain, range)
+    u = uninterpolate_number(domain[0], domain[1])
+    i = interpolate_number(range[0], range[1])
+
+    lambda do |x|
+      x = ([domain[0], x, domain[1]].sort[1]).to_f
+      i.call(u.call(x))
+    end
+  end
+
+  def to_radians(degrees)
+    degrees * Math::PI / 180
+  end
+  #
+  # def to_degrees(radians)
+  #   radians / Math::PI / 180
+  # end
 
   class ScreenMatrix
     attr_reader :width, :height
@@ -65,6 +94,63 @@ class ConsoleBars
 
     def matrix
       Array.new(width) {Array.new(height)}
+    end
+  end
+
+
+
+
+
+
+
+
+    # Returns a lambda used to determine what number is at t in the range of a and b
+  #
+  #   interpolate_number(0, 500).call(0.5) # 250
+  #   interpolate_number(0, 500).call(1) # 500
+  #
+  def interpolate_number(a, b)
+    a = a.to_f
+    b = b.to_f
+    b -= a
+    lambda { |t| a + b * t }
+  end
+
+  # Returns a lambda used to determine where t lies between a and b with an ouput
+  # range of 0 and 1
+  #
+  #   uninterpolate_number(0, 500).call(0)   # 0
+  #   uninterpolate_number(0, 500).call(250) # 0.5
+  #   uninterpolate_number(0, 500).call(500) # 1.0
+  #
+  def uninterpolate_number(a, b)
+    a = a.to_f
+    b = b.to_f
+    b = b - a > 0 ? 1 / (b - a) : 0
+
+    lambda { |x| (x - a) * b }
+  end
+
+  # Returns a closure with the specified input domain and output range
+  #
+  #   score = scale([0, 500], [0, 1.0])
+  #
+  #   score.call(0) = 0
+  #   score.call(250) = 0.5
+  #   score.call(500) = 1.0
+  #
+  #
+  # domain - Array. Input domain
+  # range  - Array. Output range
+  #
+  # Returns lambda
+  def scale(domain, range)
+    u = uninterpolate_number(domain[0], domain[1])
+    i = interpolate_number(range[0], range[1])
+
+    lambda do |x|
+      x = ([domain[0], x, domain[1]].sort[1]).to_f
+      i.call(u.call(x))
     end
   end
 
