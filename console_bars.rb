@@ -53,14 +53,17 @@ class ConsoleBars
 
     w_scale_factor = 360/n_c
 
-    y_calculator = scale([-1,1],[0,n_c])
-    (0..n_r).each do |x|
-      x_degrees = w_scale_factor * x
+    y_calculator = scale([-1,1],[0,n_r])
+    x_calculator = scale([0,n_c], [0,360])
+
+    (0..n_c).each do |x|
+      x_degrees = x_calculator.call(x)
       sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
       y = y_calculator.call(sin_y).to_i
 
+
       $stdout.puts("X=#{x}\tY=#{y}")
-      matrix[x][y] = 'x'
+      matrix[y][x] = 'x'
     end
 
     matrix
