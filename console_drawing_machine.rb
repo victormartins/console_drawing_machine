@@ -25,7 +25,7 @@ end
 class ConsoleDrawingMachine
   attr_accessor :n_rows, :n_columns
 
-  def initialize(screen_cleaner: ScreenCleaner, plotter: Plotters::SinWave)
+  def initialize(screen_cleaner: ScreenCleaner, plotter: Plotters::SinWave, screen_matrix: ScreenMatrix)
     @n_rows, @n_columns = $stdout.winsize
     @n_rows = @n_rows - 2
     @debug = false
@@ -34,6 +34,7 @@ class ConsoleDrawingMachine
     @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
     @interpolator = interpolator
     @plotter = plotter.new
+    @screen_matrix = screen_matrix.new(n_rows, n_columns)
   end
 
   def start
@@ -41,8 +42,8 @@ class ConsoleDrawingMachine
 
     (1..10).each do |increment|
       $stdout.puts "increment: #{increment}" if debug
-      screen_matrix = ScreenMatrix.new(n_rows, n_columns).matrix
-      draw_wave(screen_matrix, increment: increment)
+      matrix = screen_matrix.matrix
+      draw_wave(matrix, increment: increment)
       pause_screen unless debug
       clear_screen unless debug
     end
@@ -50,7 +51,7 @@ class ConsoleDrawingMachine
 
   private
   #injected dependencies
-  attr_reader :screen_cleaner, :interpolator, :plotter
+  attr_reader :screen_cleaner, :interpolator, :plotter, :screen_matrix
   attr_reader :debug
 
   def clear_screen
