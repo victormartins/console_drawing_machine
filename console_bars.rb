@@ -5,42 +5,58 @@
 require 'pry'
 require 'io/console'
 
+class ScreenCleaner
+  attr_reader :screen_with
+
+  def initialize(screen_with: screen_with)
+    @screen_with = screen_with
+  end
+
+  def clear
+    n = 0
+    while n < screen_with
+      $stdout.puts ''
+      n = n + 1
+    end
+  end
+end
+
 
 class ConsoleBars
   attr_accessor :n_rows, :n_columns
 
-  def initialize
+  def initialize(screen_cleaner: ScreenCleaner)
     @n_rows, @n_columns = $stdout.winsize
+    @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
   end
 
   def start
     clear_screen
 
-    screen_matrix = ScreenMatrix.new(n_rows, n_columns).matrix
-
-    draw_wave(screen_matrix)
-  end
-
-  def clear_screen
-    n = 0
-    while n < n_rows
-      $stdout.puts ''
-      n = n + 1
+    (1..1000).each do |increment|
+      screen_matrix = ScreenMatrix.new(n_rows, n_columns).matrix
+      draw_wave(screen_matrix, increment: increment)
+      sleep(1.0/24.0)
+      clear_screen
     end
   end
 
-  def draw_wave(matrix)
+  private
+  attr_reader :screen_cleaner
+
+  def clear_screen
+    screen_cleaner.clear
+  end
+
+  def draw_wave(matrix, increment: 1)
     n_r = matrix.length - 1
     n_c = matrix.first.length - 1
 
-    matrix = plot_wave(matrix)
+    matrix = plot_wave(matrix, increment: increment)
 
-    2.times do
-      matrix.each do |row|
-        row.each_with_index do |content, index|
-          print_character(content, index, n_c)
-        end
-          sleep(1.0/160.0)
+    matrix.each do |row|
+      row.each_with_index do |content, index|
+        print_character(content, index, n_c)
       end
     end
   end
@@ -50,7 +66,7 @@ class ConsoleBars
     $stdout.puts if (index == n_c)
   end
 
-  def plot_wave(matrix)
+  def plot_wave(matrix, increment: 1)
     n_r = matrix.length - 1
     n_c = matrix.first.length - 1
 
@@ -60,12 +76,12 @@ class ConsoleBars
     x_calculator = scale([0,n_c], [0,360])
 
     (0..n_c).each do |x|
-      x_degrees = x_calculator.call(x)
+      x_degrees = x_calculator.call(x+increment)
       sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
       y = y_calculator.call(sin_y).to_i
 
 
-      $stdout.puts("X=#{x}\tY=#{y}")
+      # $stdout.puts("X=#{x}\tY=#{y}")
       matrix[y][x] = 'x'
     end
 
@@ -168,4 +184,6 @@ end
 case ARGV[0]
 when "start"
   ConsoleBars.new.start
+else
+  $stdout.puts 'Use the "start" option moron.'
 end
