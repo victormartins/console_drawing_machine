@@ -19,10 +19,10 @@ class ConsoleDrawingMachine
 
     # Injected Dependencies
     @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
-    @interpolator = interpolator
-    @plotter = plotter.new
-    @printer = printer.new
-    @screen_matrix = screen_matrix.new(n_rows, n_columns)
+    @interpolator   = interpolator
+    @plotter        = plotter.new
+    @printer        = printer.new
+    @screen_matrix  = screen_matrix.new(n_rows, n_columns)
   end
 
   def start
@@ -53,6 +53,7 @@ class ConsoleDrawingMachine
   end
 end
 
+# Plots data into the screen matrix
 module Plotters
   class SinWave
     def initialize(interpolator: Interpolator)
@@ -104,6 +105,7 @@ class ScreenCleaner
   end
 end
 
+# Matrix array that represents the screen
 class ScreenMatrix
   attr_reader :width, :height
 
@@ -117,6 +119,7 @@ class ScreenMatrix
   end
 end
 
+# converts scales into other scales
 module Interpolator
     # Returns a lambda used to determine what number is at t in the range of a and b
   #
@@ -169,6 +172,7 @@ module Interpolator
   end
 end
 
+# prints the content to the screen
 class Printer
   def draw(matrix)
     max_columns = matrix.first.length-1
@@ -179,6 +183,7 @@ class Printer
     end
   end
 
+  private
   def print_character(content, index, max_columns)
     $stdout.print content.nil? ? ' ' : content
     $stdout.puts if (index == max_columns)
