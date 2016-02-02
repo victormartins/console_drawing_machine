@@ -5,27 +5,14 @@
 require 'pry'
 require 'io/console'
 
-class ScreenCleaner
-  attr_reader :screen_with
-
-  def initialize(screen_with: screen_with)
-    @screen_with = screen_with
-  end
-
-  def clear
-    n = 0
-    while n < screen_with
-      $stdout.puts ''
-      n = n + 1
-    end
-  end
-end
-
-
 class ConsoleDrawingMachine
   attr_accessor :n_rows, :n_columns
 
-  def initialize(screen_cleaner: ScreenCleaner, plotter: Plotters::SinWave, screen_matrix: ScreenMatrix)
+  def initialize( screen_cleaner: ScreenCleaner,
+                  plotter:        Plotters::SinWave,
+                  screen_matrix:  ScreenMatrix,
+                  printer:        Printer)
+
     @n_rows, @n_columns = $stdout.winsize
     @n_rows = @n_rows - 2
     @debug = false
@@ -34,6 +21,7 @@ class ConsoleDrawingMachine
     @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
     @interpolator = interpolator
     @plotter = plotter.new
+    @printer = printer.new
     @screen_matrix = screen_matrix.new(n_rows, n_columns)
   end
 
@@ -43,7 +31,9 @@ class ConsoleDrawingMachine
     (1..10).each do |increment|
       $stdout.puts "increment: #{increment}" if debug
       matrix = screen_matrix.matrix
-      draw_wave(matrix, increment: increment)
+
+      matrix = plotter.plot(matrix, frame: increment)
+      printer.draw(matrix) unless debug
       pause_screen unless debug
       clear_screen unless debug
     end
@@ -51,7 +41,7 @@ class ConsoleDrawingMachine
 
   private
   #injected dependencies
-  attr_reader :screen_cleaner, :interpolator, :plotter, :screen_matrix
+  attr_reader :screen_cleaner, :interpolator, :plotter, :screen_matrix, :printer
   attr_reader :debug
 
   def clear_screen
@@ -60,25 +50,6 @@ class ConsoleDrawingMachine
 
   def pause_screen
     sleep(1.0/24.0)
-  end
-
-  def draw_wave(matrix, increment: 1)
-    matrix = plotter.plot(matrix, frame: increment)
-    draw(matrix) unless debug
-  end
-
-  def draw(matrix)
-    max_columns = matrix.first.length-1
-    matrix.each do |row|
-      row.each_with_index do |content, index|
-        print_character(content, index, max_columns)
-      end
-    end
-  end
-
-  def print_character(content, index, max_columns)
-    $stdout.print content.nil? ? ' ' : content
-    $stdout.puts if (index == max_columns)
   end
 end
 
@@ -113,6 +84,22 @@ module Plotters
 
     def to_radians(degrees)
       degrees * Math::PI / 180
+    end
+  end
+end
+
+class ScreenCleaner
+  attr_reader :screen_with
+
+  def initialize(screen_with: screen_with)
+    @screen_with = screen_with
+  end
+
+  def clear
+    n = 0
+    while n < screen_with
+      $stdout.puts ''
+      n = n + 1
     end
   end
 end
@@ -179,6 +166,22 @@ module Interpolator
       x = ([domain[0], x, domain[1]].sort[1]).to_f
       i.call(u.call(x))
     end
+  end
+end
+
+class Printer
+  def draw(matrix)
+    max_columns = matrix.first.length-1
+    matrix.each do |row|
+      row.each_with_index do |content, index|
+        print_character(content, index, max_columns)
+      end
+    end
+  end
+
+  def print_character(content, index, max_columns)
+    $stdout.print content.nil? ? ' ' : content
+    $stdout.puts if (index == max_columns)
   end
 end
 
