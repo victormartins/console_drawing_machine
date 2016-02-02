@@ -22,7 +22,7 @@ class ScreenCleaner
 end
 
 
-class ConsoleBars
+class ConsoleDrawingMachine
   attr_accessor :n_rows, :n_columns
 
   def initialize(screen_cleaner: ScreenCleaner, interpolator: Interpolator)
@@ -75,10 +75,8 @@ class ConsoleBars
     n_r = matrix.length - 1
     n_c = matrix.first.length - 1
 
-    w_scale_factor = 360/n_c
-
-    y_calculator = scale([-1,1],[0,n_r])
-    x_calculator = scale([0,n_c], [0,360])
+    y_calculator = interpolator.scale([-1,1],[0,n_r])
+    x_calculator = interpolator.scale([0,n_c], [0,360])
 
     (0..n_c).each do |x|
       x_degrees = x_calculator.call(x+increment)
@@ -87,20 +85,10 @@ class ConsoleBars
 
 
       # $stdout.puts("X=#{x}\tY=#{y}")
-      matrix[y][x] = 'x'
+      matrix[y][x] = '.'
     end
 
     matrix
-  end
-
-  def scale(domain, range)
-    u = Interpolator.uninterpolate_number(domain[0], domain[1])
-    i = Interpolator.interpolate_number(range[0], range[1])
-
-    lambda do |x|
-      x = ([domain[0], x, domain[1]].sort[1]).to_f
-      i.call(u.call(x))
-    end
   end
 
   def to_radians(degrees)
@@ -110,25 +98,21 @@ class ConsoleBars
   # def to_degrees(radians)
   #   radians / Math::PI / 180
   # end
-
-  class ScreenMatrix
-    attr_reader :width, :height
-
-    def initialize(width, height)
-      @width = width
-      @height = height
-    end
-
-    def matrix
-      Array.new(width) {Array.new(height)}
-    end
-  end
 end
 
 
+class ScreenMatrix
+  attr_reader :width, :height
 
+  def initialize(width, height)
+    @width = width
+    @height = height
+  end
 
-
+  def matrix
+    Array.new(width) {Array.new(height)}
+  end
+end
 
 module Interpolator
     # Returns a lambda used to determine what number is at t in the range of a and b
@@ -182,12 +166,9 @@ module Interpolator
   end
 end
 
-
-
-
 case ARGV[0]
 when "start"
-  ConsoleBars.new.start
+  ConsoleDrawingMachine.new.start
 else
   $stdout.puts 'Use the "start" option moron.'
 end
