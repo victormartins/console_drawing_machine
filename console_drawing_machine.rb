@@ -8,7 +8,7 @@ require 'io/console'
 require_relative 'interpolator'
 require_relative 'screen_matrix'
 require_relative 'screen_cleaner'
-require_relative 'printer'
+require_relative 'printers'
 require_relative 'plotters'
 
 class ConsoleDrawingMachine
@@ -17,7 +17,7 @@ class ConsoleDrawingMachine
   def initialize( screen_cleaner: ScreenCleaner,
                   plotter:        Plotters::SinWave,
                   screen_matrix:  ScreenMatrix,
-                  printer:        Printer)
+                  printer:        ConsolePrinter)
 
     @n_rows, @n_columns = $stdout.winsize
     @n_rows = @n_rows - 2

@@ -1,5 +1,5 @@
 # prints the content to the screen
-class Printer
+class ConsolePrinter
   def draw(matrix)
     max_columns = matrix.first.length-1
     matrix.each do |row|
