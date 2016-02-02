@@ -25,9 +25,12 @@ end
 class ConsoleBars
   attr_accessor :n_rows, :n_columns
 
-  def initialize(screen_cleaner: ScreenCleaner)
+  def initialize(screen_cleaner: ScreenCleaner, interpolator: Interpolator)
     @n_rows, @n_columns = $stdout.winsize
+    @n_rows = @n_rows - 2
+
     @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
+    @interpolator = interpolator
   end
 
   def start
@@ -42,28 +45,30 @@ class ConsoleBars
   end
 
   private
-  attr_reader :screen_cleaner
+  #injected dependencies
+  attr_reader :screen_cleaner, :interpolator
 
   def clear_screen
     screen_cleaner.clear
   end
 
   def draw_wave(matrix, increment: 1)
-    n_r = matrix.length - 1
-    n_c = matrix.first.length - 1
-
     matrix = plot_wave(matrix, increment: increment)
+    draw(matrix)
+  end
 
+  def draw(matrix)
+    max_columns = matrix.first.length-1
     matrix.each do |row|
       row.each_with_index do |content, index|
-        print_character(content, index, n_c)
+        print_character(content, index, max_columns)
       end
     end
   end
 
-  def print_character(content, index, n_c)
+  def print_character(content, index, max_columns)
     $stdout.print content.nil? ? ' ' : content
-    $stdout.puts if (index == n_c)
+    $stdout.puts if (index == max_columns)
   end
 
   def plot_wave(matrix, increment: 1)
@@ -89,8 +94,8 @@ class ConsoleBars
   end
 
   def scale(domain, range)
-    u = uninterpolate_number(domain[0], domain[1])
-    i = interpolate_number(range[0], range[1])
+    u = Interpolator.uninterpolate_number(domain[0], domain[1])
+    i = Interpolator.interpolate_number(range[0], range[1])
 
     lambda do |x|
       x = ([domain[0], x, domain[1]].sort[1]).to_f
@@ -118,20 +123,20 @@ class ConsoleBars
       Array.new(width) {Array.new(height)}
     end
   end
+end
 
 
 
 
 
 
-
-
+module Interpolator
     # Returns a lambda used to determine what number is at t in the range of a and b
   #
   #   interpolate_number(0, 500).call(0.5) # 250
   #   interpolate_number(0, 500).call(1) # 500
   #
-  def interpolate_number(a, b)
+  def self.interpolate_number(a, b)
     a = a.to_f
     b = b.to_f
     b -= a
@@ -145,7 +150,7 @@ class ConsoleBars
   #   uninterpolate_number(0, 500).call(250) # 0.5
   #   uninterpolate_number(0, 500).call(500) # 1.0
   #
-  def uninterpolate_number(a, b)
+  def self.uninterpolate_number(a, b)
     a = a.to_f
     b = b.to_f
     b = b - a > 0 ? 1 / (b - a) : 0
@@ -166,7 +171,7 @@ class ConsoleBars
   # range  - Array. Output range
   #
   # Returns lambda
-  def scale(domain, range)
+  def self.scale(domain, range)
     u = uninterpolate_number(domain[0], domain[1])
     i = interpolate_number(range[0], range[1])
 
@@ -175,7 +180,6 @@ class ConsoleBars
       i.call(u.call(x))
     end
   end
-
 end
 
 
