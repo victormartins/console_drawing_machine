@@ -34,8 +34,9 @@ class ConsoleDrawingMachine
   def start
     clear_screen unless debug
 
-    (1..10).each do |increment|
-      $stdout.puts "increment: #{increment}" if debug
+    number_of_frames = 10
+    (1..number_of_frames).each do |increment|
+    increment = 1
       matrix = screen_matrix.new_matrix
       matrix = plotter.plot(matrix, frame: increment)
       printer.draw(matrix) unless debug
@@ -61,8 +62,13 @@ end
 
 
 case ARGV[0]
-when "start"
+when "sin"
   ConsoleDrawingMachine.new.start
+when "bars"
+  ConsoleDrawingMachine.new(plotter: Plotters::Bars).start
+when "middle_line"
+  ConsoleDrawingMachine.new(plotter: Plotters::MiddleLine).start
+
 else
-  $stdout.puts 'Use the "start" option moron.'
+  $stdout.puts 'Use one of the following options: sin, bars, middle_line'
 end
