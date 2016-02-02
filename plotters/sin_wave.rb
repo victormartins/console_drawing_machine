@@ -16,9 +16,10 @@ module Plotters
 
       log("[#{frame}]\n")
 
+      # binding.pry
       (0..n_c).each do |row|
-
-        x_degrees = x_calculator.call(row)
+        cyclic_row =  (row + frame)%n_c
+        x_degrees = x_calculator.call(cyclic_row)
         sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
 
         line = y_calculator.call(sin_y).to_i

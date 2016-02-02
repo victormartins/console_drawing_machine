@@ -34,9 +34,8 @@ class ConsoleDrawingMachine
   def start
     clear_screen unless debug
 
-    number_of_frames = 10
+    number_of_frames = 1000
     (1..number_of_frames).each do |increment|
-    increment = 1
       matrix = screen_matrix.new_matrix
       matrix = plotter.plot(matrix, frame: increment)
       printer.draw(matrix) unless debug
