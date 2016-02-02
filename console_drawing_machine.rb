@@ -25,36 +25,45 @@ end
 class ConsoleDrawingMachine
   attr_accessor :n_rows, :n_columns
 
-  def initialize(screen_cleaner: ScreenCleaner, interpolator: Interpolator)
+  def initialize(screen_cleaner: ScreenCleaner, plotter: Plotters::SinWave)
     @n_rows, @n_columns = $stdout.winsize
     @n_rows = @n_rows - 2
+    @debug = false
 
+    # Injected Dependencies
     @screen_cleaner = screen_cleaner.new(screen_with: n_rows)
     @interpolator = interpolator
+    @plotter = plotter.new
   end
 
   def start
-    clear_screen
+    clear_screen unless debug
 
-    (1..1000).each do |increment|
+    (1..10).each do |increment|
+      $stdout.puts "increment: #{increment}" if debug
       screen_matrix = ScreenMatrix.new(n_rows, n_columns).matrix
       draw_wave(screen_matrix, increment: increment)
-      sleep(1.0/24.0)
-      clear_screen
+      pause_screen unless debug
+      clear_screen unless debug
     end
   end
 
   private
   #injected dependencies
-  attr_reader :screen_cleaner, :interpolator
+  attr_reader :screen_cleaner, :interpolator, :plotter
+  attr_reader :debug
 
   def clear_screen
     screen_cleaner.clear
   end
 
+  def pause_screen
+    sleep(1.0/24.0)
+  end
+
   def draw_wave(matrix, increment: 1)
-    matrix = plot_wave(matrix, increment: increment)
-    draw(matrix)
+    matrix = plotter.plot(matrix, frame: increment)
+    draw(matrix) unless debug
   end
 
   def draw(matrix)
@@ -70,36 +79,42 @@ class ConsoleDrawingMachine
     $stdout.print content.nil? ? ' ' : content
     $stdout.puts if (index == max_columns)
   end
-
-  def plot_wave(matrix, increment: 1)
-    n_r = matrix.length - 1
-    n_c = matrix.first.length - 1
-
-    y_calculator = interpolator.scale([-1,1],[0,n_r])
-    x_calculator = interpolator.scale([0,n_c], [0,360])
-
-    (0..n_c).each do |x|
-      x_degrees = x_calculator.call(x+increment)
-      sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
-      y = y_calculator.call(sin_y).to_i
-
-
-      # $stdout.puts("X=#{x}\tY=#{y}")
-      matrix[y][x] = '.'
-    end
-
-    matrix
-  end
-
-  def to_radians(degrees)
-    degrees * Math::PI / 180
-  end
-  #
-  # def to_degrees(radians)
-  #   radians / Math::PI / 180
-  # end
 end
 
+module Plotters
+  class SinWave
+    def initialize(interpolator: Interpolator)
+      @interpolator = interpolator
+    end
+
+    def plot(matrix, frame: 1)
+      n_r = matrix.length - 1
+      n_c = matrix.first.length - 1
+
+      y_calculator = interpolator.scale([-1,1],[0,n_r])
+      x_calculator = interpolator.scale([0,n_c], [0,360])
+
+      (0..n_c).each do |x|
+        x_degrees = x_calculator.call(x+frame)
+        sin_y = Math.sin(to_radians(x_degrees)) # y is going to be between -1 and 1
+        y = y_calculator.call(sin_y).to_i
+
+
+        $stdout.puts("X=#{x}\tY=#{y}")
+        matrix[y][x] = '.'
+      end
+
+      matrix
+    end
+
+    private
+    attr_reader :interpolator
+
+    def to_radians(degrees)
+      degrees * Math::PI / 180
+    end
+  end
+end
 
 class ScreenMatrix
   attr_reader :width, :height
