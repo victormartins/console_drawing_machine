@@ -7,7 +7,7 @@ class ScreenMatrix
     @height = height
   end
 
-  def matrix
+  def new_matrix
     Array.new(width) {Array.new(height)}
   end
 end

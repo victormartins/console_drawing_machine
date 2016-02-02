@@ -36,8 +36,7 @@ class ConsoleDrawingMachine
 
     (1..10).each do |increment|
       $stdout.puts "increment: #{increment}" if debug
-      matrix = screen_matrix.matrix
-
+      matrix = screen_matrix.new_matrix
       matrix = plotter.plot(matrix, frame: increment)
       printer.draw(matrix) unless debug
       pause_screen unless debug
